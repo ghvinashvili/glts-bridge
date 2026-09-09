@@ -194,6 +194,7 @@ cd glts-bridge
 | `glts watch` | ცოცხლად აჩვენებს ყოველ გარდაქმნას, სანამ Ctrl+C არ დააჭერ |
 | `glts try TEXT` | ერთ სტრიქონს გარდაქმნის, არაფერს ცვლის |
 | `glts latin FILE` | ქართულ ფაილს ლათინურად ბეჭდავს |
+| `glts kartuli FILE` | ლათინურ ფაილს ქართულად ბეჭდავს |
 | `glts on` | რთავს ხიდს |
 | `glts off` | თიშავს ხიდს |
 
@@ -216,6 +217,19 @@ glts latin სტატია.md
 ```bash
 glts latin --exact სტატია.md
 ```
+
+### ქართული დოკუმენტის დაწერა
+
+საპირისპირო ბრძანება `glts kartuli` ლათინურ ტექსტს ქართულად აქცევს. ასე
+დოკუმენტის დაწერაც იაფდება: მოდელი ლათინურად წერს, ფაილში კი ნამდვილი ქართული
+ჯდება.
+
+```bash
+glts kartuli chernaxati.txt > statia.md
+```
+
+მოქმედებს იგივე წესები: კოდის ბლოკები, უკუტალღები, ბმულები და გზები უცვლელი
+რჩება, ლექსიკონის სიტყვები ლათინურად, დეფისის შემდეგ კი ქართული ბოლოსართი.
 
 ### თვალყურის დევნება
 
@@ -300,6 +314,8 @@ The `glts` CLI controls and inspects the bridge: `glts status` reports whether
 it is registered, `glts watch` follows every conversion live in a second
 terminal and shows both the Latin that was sent and the Georgian that was
 displayed, `glts try TEXT` converts a single line, `glts latin FILE` prints a Georgian
-file in Latin so the model can read it for fewer tokens, and `glts on` / `glts off`
+file in Latin so the model can read it for fewer tokens, `glts kartuli FILE`
+turns Latin back into Georgian so a document can be written cheaply too, and
+`glts on` / `glts off`
 switch the bridge itself. Tracing is only written while `watch` is running, so
 leaving the bridge on costs nothing.

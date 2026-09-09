@@ -7,6 +7,7 @@
     glts watch     follow every conversion live, until Ctrl+C
     glts try TEXT  convert one line without touching anything
     glts latin F   print a Georgian file in Latin; --exact keeps it reversible
+    glts kartuli F print a Latin file back as Georgian, for writing documents
 """
 
 import importlib.machinery
@@ -198,14 +199,22 @@ def cmd_try(text):
     return 0
 
 
-def cmd_latin(path, exact=False):
-    """Georgian in, Latin out. Reads stdin when no file is named."""
+def read_input(path):
     if path:
         with open(path, encoding="utf-8") as fh:
-            text = fh.read()
-    else:
-        text = sys.stdin.read()
-    sys.stdout.write(_hook.to_latin(text, exact))
+            return fh.read()
+    return sys.stdin.read()
+
+
+def cmd_kartuli(path):
+    """Latin in, Georgian out. The way to write a Georgian file cheaply."""
+    sys.stdout.write(_hook.convert_delta(read_input(path), "glts-kartuli", True))
+    return 0
+
+
+def cmd_latin(path, exact=False):
+    """Georgian in, Latin out. Reads stdin when no file is named."""
+    sys.stdout.write(_hook.to_latin(read_input(path), exact))
     return 0
 
 
@@ -227,6 +236,8 @@ def main(argv):
     if command == "latin":
         files = [a for a in rest if not a.startswith("-")]
         return cmd_latin(files[0] if files else None, "--exact" in rest)
+    if command == "kartuli":
+        return cmd_kartuli(rest[0] if rest else None)
     print("unknown command: %s" % command, file=sys.stderr)
     print(__doc__.strip(), file=sys.stderr)
     return 2

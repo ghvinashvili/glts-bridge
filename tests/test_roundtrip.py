@@ -59,6 +59,13 @@ def document_case():
     return text, hook.convert_delta(hook.to_latin(text, True), "doc", True)
 
 
+def writing_case():
+    """Latin drafted by the model must become the intended Georgian file."""
+    draft = "# sathauri\n\nes aris `settings.json` da https://drupal.ddev.site.\n"
+    want = "# სათაური\n\nეს არის `settings.json` და https://drupal.ddev.site.\n"
+    return want, hook.convert_delta(draft, "write", True)
+
+
 def main():
     lines = SENTENCES
     if len(sys.argv) > 1:
@@ -72,6 +79,11 @@ def main():
             failures += 1
             if failures <= 10:
                 print("FAIL  %s\n  latin %s\n  back  %s" % (text, latin, back))
+
+    want, got = writing_case()
+    if got != want:
+        failures += 1
+        print("FAIL  writing a document\n  want %r\n  got  %r" % (want, got))
 
     source, back = document_case()
     if back != source:
