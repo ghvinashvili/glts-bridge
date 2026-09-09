@@ -69,7 +69,7 @@ LOOKUP = dict(TABLE)
 
 # One word, optionally escaped with a backslash, optionally carrying Georgian
 # endings after hyphens: \python, python-is, docker-shi.
-WORD = re.compile(r"\\?[A-Za-z]+(?:-[A-Za-z]+)*")
+WORD = re.compile(r"\\?[A-Za-z]+(?:'[A-Za-z]+)*(?:-[A-Za-z]+(?:'[A-Za-z]+)*)*")
 
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 KEEP_FILES = [
@@ -105,7 +105,7 @@ LITERAL = re.compile(
           [a-zA-Z][a-zA-Z0-9+.-]*://\S+   # scheme://host/path
         | ~?/\S+                          # absolute or ~/ path
         | \S+/\S+                         # anything with an inner slash
-        | (?<![A-Za-z0-9])--?[A-Za-z][\w-]*  # command line flag, not word-internal
+        | (?<![^\s])--?[A-Za-z][\w-]*      # command line flag, at a token start
         | \w+\.[A-Za-z]\S*                # dotted name, file.ext, host.tld
         | \S+@\S+                         # email or user@host
         )""",
@@ -114,12 +114,20 @@ LITERAL = re.compile(
 
 FENCE = re.compile(r"^\s*(?:```|~~~)")
 
+# A Georgian ending glued to a closing backtick: `settings.json`-shi.
+ENDING = re.compile(r"^-[a-z]+(?:'[a-z]+)*")
+
 
 def convert_segment(segment, escaped=False):
-    """Transliterate one hyphen-free piece unless it must stay in Latin."""
-    if escaped or not segment.islower() or segment in KEEP:
-        return segment
-    return MATCHER.sub(lambda m: LOOKUP[m.group(0)], segment)
+    """Transliterate one hyphen-free piece unless it must stay in Latin.
+
+    An apostrophe inside the piece is a digraph break, not a letter: "khid'ze"
+    is ხიდზე, while "khidze" would read the "dz" as ძ.
+    """
+    if escaped or not segment.islower() or segment.replace("'", "") in KEEP:
+        return segment.replace("'", "")
+    parts = segment.split("'")
+    return "".join(MATCHER.sub(lambda m: LOOKUP[m.group(0)], part) for part in parts)
 
 
 def convert_word(word):
@@ -154,7 +162,15 @@ def convert_line(line):
     """Transliterate a line, leaving backtick-delimited spans untouched."""
     parts = line.split("`")
     for i in range(0, len(parts), 2):  # even indexes are outside backticks
-        parts[i] = convert_plain(parts[i])
+        part = parts[i]
+        ending = ""
+        if i > 0:
+            # Right after a code span a leading dash is an ending, not a flag.
+            hit = ENDING.match(part)
+            if hit:
+                ending = "-" + convert_segment(hit.group(0)[1:])
+                part = part[hit.end():]
+        parts[i] = ending + convert_plain(part)
     return "`".join(parts)
 
 

@@ -47,6 +47,12 @@ CASES = [
     ("\\gamarjoba da gamarjoba", "gamarjoba და გამარჯობა"),
     # Flags survive, and a hyphen inside a word is not mistaken for one.
     ("flagi --force da -v.", "ფლაგი --force და -v."),
+    # An ending after a code span is still an ending, not a flag.
+    ("`README.md`-shi devs.", "`README.md`-ში დევს."),
+    ("`git commit`-is shetyobineba.", "`git commit`-ის შეტყობინება."),
+    # An apostrophe breaks a digraph that would otherwise win.
+    ("khid'ze", "ხიდზე"),
+    ("khidze", "ხიძე"),
 ]
 
 
