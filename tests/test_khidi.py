@@ -6,7 +6,7 @@ import os
 import subprocess
 import sys
 
-HOOK = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "bin", "khidi")
+HOOK = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "bin", "khidi-hook")
 
 
 def display(delta, message_id="test", final=True):

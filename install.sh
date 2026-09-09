@@ -1,44 +1,25 @@
 #!/usr/bin/env bash
-# Register khidi as a MessageDisplay hook in the user-level Claude Code settings.
+# Register khidi as a MessageDisplay hook and put the CLI on PATH.
 set -euo pipefail
 
 REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-HOOK="$REPO/bin/khidi"
+BINDIR="$HOME/.local/bin"
 SETTINGS="${CLAUDE_CONFIG_DIR:-$HOME/.claude}/settings.json"
 
-chmod +x "$HOOK"
-mkdir -p "$(dirname "$SETTINGS")"
-[ -f "$SETTINGS" ] || echo '{}' > "$SETTINGS"
-cp "$SETTINGS" "$SETTINGS.khidi-backup"
+chmod +x "$REPO/bin/khidi" "$REPO/bin/khidi-hook"
 
-HOOK="$HOOK" SETTINGS="$SETTINGS" python3 - <<'PY'
-import json, os
+mkdir -p "$BINDIR"
+ln -sf "$REPO/bin/khidi" "$BINDIR/khidi"
 
-settings_path = os.environ["SETTINGS"]
-hook_path = os.environ["HOOK"]
+[ -f "$SETTINGS" ] && cp "$SETTINGS" "$SETTINGS.khidi-backup"
 
-with open(settings_path) as fh:
-    settings = json.load(fh)
+"$REPO/bin/khidi" on
 
-hooks = settings.setdefault("hooks", {})
-entries = hooks.setdefault("MessageDisplay", [])
-
-def already_there(entries):
-    for entry in entries:
-        for hook in entry.get("hooks", []):
-            if hook.get("command") == hook_path:
-                return True
-    return False
-
-if not already_there(entries):
-    entries.append({"hooks": [{"type": "command", "command": hook_path}]})
-
-with open(settings_path, "w") as fh:
-    json.dump(settings, fh, indent=2, ensure_ascii=False)
-    fh.write("\n")
-
-print("registered %s in %s" % (hook_path, settings_path))
-PY
-
-echo "Backup of the previous settings: $SETTINGS.khidi-backup"
-echo "Restart Claude Code for the hook to take effect."
+echo
+echo "CLI installed at $BINDIR/khidi"
+[ -f "$SETTINGS.khidi-backup" ] && echo "Previous settings kept at $SETTINGS.khidi-backup"
+echo
+echo "Try:  khidi status        # is the bridge on?"
+echo "      khidi watch         # follow every conversion live"
+echo "      khidi try gamarjoba # convert one line"
+echo "      khidi off           # switch the bridge off again"

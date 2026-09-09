@@ -1,0 +1,208 @@
+#!/usr/bin/env python3
+"""khidi - a Georgian transliteration bridge for Claude Code.
+
+Reads a MessageDisplay hook payload on stdin and writes a hook response on
+stdout.  Latin letters in the assistant's message are rendered as Georgian
+script for display only; the stored transcript and the text the model sees
+stay in Latin.
+
+Code, commands and identifiers are left exactly as written.  See README.md
+for the rules and the full letter table.
+"""
+
+import json
+import os
+import re
+import sys
+import tempfile
+import time
+
+STATE_DIR = os.path.join(
+    os.environ.get("XDG_STATE_HOME") or os.path.expanduser("~/.local/state"), "khidi"
+)
+TRACE_FLAG = os.path.join(STATE_DIR, "trace.on")
+TRACE_LOG = os.path.join(STATE_DIR, "trace.jsonl")
+TRACE_MAX_BYTES = 5 * 1024 * 1024
+
+# Longest sequences first: the matcher is greedy and order matters.
+TABLE = [
+    ("tch", "ჭ"),
+    ("dz", "ძ"),
+    ("gh", "ღ"),
+    ("zh", "ჟ"),
+    ("kh", "ხ"),
+    ("sh", "შ"),
+    ("ch", "ჩ"),
+    ("th", "თ"),
+    ("ph", "ფ"),
+    ("ts", "ც"),
+    ("a", "ა"),
+    ("b", "ბ"),
+    ("g", "გ"),
+    ("d", "დ"),
+    ("e", "ე"),
+    ("v", "ვ"),
+    ("z", "ზ"),
+    ("i", "ი"),
+    ("k", "კ"),
+    ("l", "ლ"),
+    ("m", "მ"),
+    ("n", "ნ"),
+    ("o", "ო"),
+    ("p", "პ"),
+    ("r", "რ"),
+    ("s", "ს"),
+    ("t", "ტ"),
+    ("u", "უ"),
+    ("f", "ფ"),
+    ("q", "ქ"),
+    ("y", "ყ"),
+    ("w", "წ"),
+    ("j", "ჯ"),
+    ("h", "ჰ"),
+    ("c", "ც"),
+    ("x", "ხ"),
+]
+
+MATCHER = re.compile("|".join(seq for seq, _ in TABLE))
+LOOKUP = dict(TABLE)
+
+# A run of characters that may form one transliterated word.
+WORD = re.compile(r"[A-Za-z]+")
+
+# Tokens that must survive untouched: URLs, paths, flags, dotted identifiers.
+LITERAL = re.compile(
+    r"""(?:
+          [a-zA-Z][a-zA-Z0-9+.-]*://\S+   # scheme://host/path
+        | ~?/\S+                          # absolute or ~/ path
+        | \S+/\S+                         # anything with an inner slash
+        | --?[A-Za-z][\w-]*               # command line flag
+        | \w+\.[A-Za-z]\S*                # dotted name, file.ext, host.tld
+        | \S+@\S+                         # email or user@host
+        )""",
+    re.VERBOSE,
+)
+
+FENCE = re.compile(r"^\s*(?:```|~~~)")
+
+
+def convert_word(word):
+    """Transliterate one all-lowercase word; leave anything else alone."""
+    if not word.islower():
+        return word
+    return MATCHER.sub(lambda m: LOOKUP[m.group(0)], word)
+
+
+def convert_plain(text):
+    """Transliterate ordinary prose, skipping literal tokens."""
+    out = []
+    pos = 0
+    for hit in LITERAL.finditer(text):
+        out.append(WORD.sub(lambda m: convert_word(m.group(0)), text[pos:hit.start()]))
+        out.append(hit.group(0))
+        pos = hit.end()
+    out.append(WORD.sub(lambda m: convert_word(m.group(0)), text[pos:]))
+    return "".join(out)
+
+
+def convert_line(line):
+    """Transliterate a line, leaving backtick-delimited spans untouched."""
+    parts = line.split("`")
+    for i in range(0, len(parts), 2):  # even indexes are outside backticks
+        parts[i] = convert_plain(parts[i])
+    return "`".join(parts)
+
+
+def state_path(message_id):
+    safe = re.sub(r"[^A-Za-z0-9_-]", "", str(message_id))[:64] or "unknown"
+    return os.path.join(tempfile.gettempdir(), "khidi-fence-%s" % safe)
+
+
+def read_fence(path):
+    try:
+        with open(path) as fh:
+            return fh.read().strip() == "1"
+    except OSError:
+        return False
+
+
+def write_fence(path, inside):
+    try:
+        with open(path, "w") as fh:
+            fh.write("1" if inside else "0")
+    except OSError:
+        pass
+
+
+def convert_delta(delta, message_id, final):
+    """Convert one streamed chunk, remembering fenced code across chunks."""
+    path = state_path(message_id)
+    inside = read_fence(path)
+    lines = delta.split("\n")
+    for index, line in enumerate(lines):
+        if FENCE.match(line):
+            inside = not inside
+            continue
+        if not inside:
+            lines[index] = convert_line(line)
+    if final:
+        try:
+            os.unlink(path)
+        except OSError:
+            pass
+    else:
+        write_fence(path, inside)
+    return "\n".join(lines)
+
+
+def trace(payload, source, shown):
+    """Append one before/after record when tracing is switched on."""
+    if not os.path.exists(TRACE_FLAG):
+        return
+    try:
+        if os.path.getsize(TRACE_LOG) > TRACE_MAX_BYTES:
+            os.unlink(TRACE_LOG)
+    except OSError:
+        pass
+    record = {
+        "time": time.strftime("%H:%M:%S"),
+        "message_id": payload.get("message_id", ""),
+        "index": payload.get("index"),
+        "final": payload.get("final"),
+        "in": source,
+        "out": shown,
+    }
+    try:
+        with open(TRACE_LOG, "a") as fh:
+            fh.write(json.dumps(record, ensure_ascii=False) + "\n")
+    except OSError:
+        pass
+
+
+def main():
+    try:
+        payload = json.load(sys.stdin)
+    except (ValueError, OSError):
+        return 0
+
+    delta = payload.get("delta") or ""
+    if not delta:
+        return 0
+
+    shown = convert_delta(delta, payload.get("message_id", ""), payload.get("final"))
+    trace(payload, delta, shown)
+    json.dump(
+        {
+            "hookSpecificOutput": {
+                "hookEventName": "MessageDisplay",
+                "displayContent": shown,
+            }
+        },
+        sys.stdout,
+        ensure_ascii=False,
+    )
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

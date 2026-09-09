@@ -83,15 +83,50 @@ cd khidi
 ./install.sh
 ```
 
-სკრიპტი hook-ს არეგისტრირებს ფაილში `~/.claude/settings.json` და წინა ვერსიის
-ასლს ინახავს გვერდით, სახელით `settings.json.khidi-backup`. ამოქმედებისთვის
-Claude Code-ის თავიდან გაშვებაა საჭირო.
+სკრიპტი hook-ს არეგისტრირებს ფაილში `~/.claude/settings.json`, წინა ვერსიის ასლს
+ინახავს გვერდით სახელით `settings.json.khidi-backup`, და `khidi` ბრძანებას დებს
+საქაღალდეში `~/.local/bin`. ამოქმედებისთვის Claude Code-ის თავიდან გაშვებაა
+საჭირო.
 
-მოხსნა:
+სრული მოხსნა:
 
 ```bash
 ./uninstall.sh
 ```
+
+## ბრძანებები
+
+| ბრძანება | რას აკეთებს |
+|---|---|
+| `khidi status` | აჩვენებს, ჩართულია თუ არა ხიდი და სად წერია ჟურნალი |
+| `khidi watch` | ცოცხლად აჩვენებს ყოველ გარდაქმნას, სანამ Ctrl+C არ დააჭერ |
+| `khidi try TEXT` | ერთ სტრიქონს გარდაქმნის, არაფერს ცვლის |
+| `khidi on` | რთავს ხიდს |
+| `khidi off` | თიშავს ხიდს |
+
+### თვალყურის დევნება
+
+`khidi watch` აჩვენებს ორივე მხარეს: რას აგზავნის მოდელი და რას ხედავ შენ.
+
+```
+22:11:49 final
+  <- khidi mushaobs.
+  -> ხიდი მუშაობს.
+```
+
+ის შეიძლება მუდმივად გაშვებული გქონდეს მეორე ტერმინალში. სანამ მუშაობს, hook
+ყოველ გარდაქმნას წერს ფაილში `~/.local/state/khidi/trace.jsonl`. გაჩერებისას
+ჩაწერა ავტომატურად ითიშება, რომ ჟურნალი უსასრულოდ არ გაიზარდოს. თუ გინდა, რომ
+ჩაწერა გაჩერების შემდეგაც გაგრძელდეს, გამოიყენე `khidi watch --keep`. ჟურნალი
+ხუთ მეგაბაიტს რომ გადააჭარბებს, თავიდან იწყება.
+
+როცა ჩაწერა გამორთულია, hook მხოლოდ ერთ შემოწმებას აკეთებს და არაფერს წერს
+დისკზე. ანუ მუდმივად ჩართული ხიდი დამატებით არაფერს ხარჯავს.
+
+### ჩართვა და გამორთვა
+
+`khidi off` hook-ს შლის კონფიგურაციიდან და ჩაწერასაც თიშავს. `khidi on` უკან
+აბრუნებს. ორივე შემთხვევაში Claude Code თავიდან უნდა გაუშვა.
 
 ## ტესტები
 
@@ -123,3 +158,10 @@ prompt, so your own Georgian input reaches the model unchanged.
 
 Install with `./install.sh`, remove with `./uninstall.sh`, test with
 `python3 tests/test_khidi.py`.
+
+The `khidi` CLI controls and inspects the bridge: `khidi status` reports whether
+it is registered, `khidi watch` follows every conversion live in a second
+terminal and shows both the Latin that was sent and the Georgian that was
+displayed, `khidi try TEXT` converts a single line, and `khidi on` / `khidi off`
+switch the bridge itself. Tracing is only written while `watch` is running, so
+leaving the bridge on costs nothing.
