@@ -132,6 +132,41 @@ JSON ველებით `turn_id`, `message_id`, `index`, `final` და `del
 `ver` ერთდროულად ქართული სიტყვებია: ის, ამ, ან, ორ, ას, ვარ, ვერ. თუ ასეთი
 სიტყვა მართლაც ინგლისურად გჭირდება, გამოიყენე გაქცევის ნიშანი.
 
+## ტერმინალის მომზადება
+
+ორი ხარვეზი ტერმინალში ქართულს გამოუსადეგარს ხდის და არც ერთი მათგანი ამ
+პროექტს არ ეკუთვნის. ისინი ჯერ უნდა გასწორდეს.
+
+**შრიფტი.** პროგრამისტული შრიფტების უმეტესობას ქართული ასოები არ აქვს, ამიტომ
+ტერმინალი პროპორციულ ქართულ შრიფტს ეშვება. ფიქსირებულ უჯრედებში ასეთი ასოები
+ერთმანეთზე ეხვევა და ტექსტი მიჭყლეტილი ჩანს. გამოსავალი არის `DejaVu Sans Mono`,
+ნამდვილი მონოსიგანის შრიფტი სრული ქართული დაფარვით.
+
+**კლავიატურა.** Debian-ის `/etc/inputrc` ტოვებს ჩართულს `convert-meta`
+პარამეტრს, რომელიც UTF-8 სიმბოლოს მაღალ ბაიტებს ESC მიმდევრობებად აქცევს.
+ამიტომ ბრძანების სტრიქონში აკრეფილი ქართული ირღვევა, თუმცა იმავე ტექსტის ჩასმა
+სწორად მუშაობს.
+
+ორივეს ერთი ბრძანება ასწორებს:
+
+```bash
+./setup/setup-terminal.sh
+```
+
+მთელი სისტემისთვის, ყველა მომხმარებელზე:
+
+```bash
+./setup/setup-terminal.sh --system
+```
+
+შემოწმება:
+
+```bash
+fc-match 'Monospace:lang=ka'
+```
+
+პასუხი `DejaVu Sans Mono` უნდა იყოს. ცვლილება ახალ ტერმინალში ამოქმედდება.
+
 ## დაყენება
 
 ```bash
@@ -230,6 +265,12 @@ backslash escapes a single word. A Georgian ending after a hyphen is still
 converted, so `python-is` displays as python-ის. Short English function words
 are kept off the list on purpose, because `is`, `an`, `or`, `as` and `var` are
 also ordinary Georgian words once written in Latin letters.
+
+Before any of this, `./setup/setup-terminal.sh` fixes two things a terminal
+gets wrong with Georgian: monospace fonts without Georgian glyphs, which make
+the letters collide in the cell grid, and readline's `convert-meta`, which
+mangles Georgian typed at the bare prompt. Add `--system` to fix them for
+every user.
 
 Install with `./install.sh`, remove with `./uninstall.sh`, test with
 `python3 tests/test_glts.py`.

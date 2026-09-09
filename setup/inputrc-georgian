@@ -1,0 +1,11 @@
+# Georgian, and any other multibyte input, at the bare shell prompt.
+#
+# Debian's /etc/inputrc leaves convert-meta on, which rewrites the high bytes
+# of a UTF-8 character into ESC sequences. Georgian typed at the prompt then
+# comes out mangled, even though the same text pastes and displays fine.
+#
+# Append these three lines to ~/.inputrc, or to /etc/inputrc for every user.
+
+set input-meta on
+set output-meta on
+set convert-meta off
