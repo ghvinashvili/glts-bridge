@@ -39,6 +39,19 @@ JSON ველებით `turn_id`, `message_id`, `index`, `final` და `del
 დამატება, მაგრამ არა თავად მოთხოვნის ჩანაცვლება. ამიტომ ხიდი ცალმხრივია:
 შენ ქართულად წერ, მოდელი ლათინურად პასუხობს, შენ კი ქართულს ხედავ.
 
+სრული გზა ერთი შეკითხვისა:
+
+```
+შენ წერ            დააყენე docker
+მოდელამდე მიდის    დააყენე docker        <- უცვლელი, ტოკენები არ იზოგება
+მოდელი წერს        docker daayenda
+შენ ხედავ          docker დააყენდა       <- აქ იზოგება ტოკენები
+```
+
+ანუ დაზოგვა მხოლოდ ბოლო ორ ხაზზე ხდება. თუ გინდა, რომ შენი მხარეც გაიაფდეს,
+უბრალოდ თვითონ დაწერე ლათინური ასოებით. მოდელი ორივეს ერთნაირად იგებს და
+ცხრილთან დამთხვევა არ არის საჭირო.
+
 ## ასოების ცხრილი
 
 გარდაქმნა ხარბია და გრძელ თანმიმდევრობას ანიჭებს უპირატესობას. მაგალითად
@@ -196,7 +209,18 @@ Latin form, so the token saving is real across turns.
 Code spans, fenced blocks, URLs, paths, command flags, dotted identifiers and
 capitalised proper nouns are left exactly as written. The reverse direction is
 not possible today: `UserPromptSubmit` can add context but cannot replace the
-prompt, so your own Georgian input reaches the model unchanged.
+prompt, so your own Georgian input reaches the model unchanged. One question end
+to end:
+
+```
+you type          დააყენე docker
+model receives    დააყენე docker        <- unchanged, no saving here
+model writes      docker daayenda
+you see           docker დააყენდა       <- the saving happens here
+```
+
+Type in Latin yourself if you want your own side to be cheap too; the model
+reads either form, and your spelling need not match the table.
 
 English words are protected two ways: `data/keep.txt` (merged with a personal
 `~/.config/khidi/keep.txt`) lists words that always stay Latin, and a leading
