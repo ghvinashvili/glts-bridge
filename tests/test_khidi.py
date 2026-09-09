@@ -36,6 +36,17 @@ CASES = [
     ("zhamiani", "ჟამიანი"),
     ("thbilisi", "თბილისი"),
     ("phoshti", "ფოშტი"),
+    # Words on the keep list stay in Latin.
+    ("gaushvi python skripti.", "გაუშვი python სკრიპტი."),
+    ("server-ze database daayenda.", "server-ზე database დააყენდა."),
+    # A Georgian ending after a hyphen is still converted.
+    ("python-is versia.", "python-ის ვერსია."),
+    ("docker-shi mushaobs.", "docker-ში მუშაობს."),
+    ("GitHub-ze avtvirthe.", "GitHub-ზე ავტვირთე."),
+    # A backslash escapes a word that is not on the list.
+    ("\\gamarjoba da gamarjoba", "gamarjoba და გამარჯობა"),
+    # Flags survive, and a hyphen inside a word is not mistaken for one.
+    ("flagi --force da -v.", "ფლაგი --force და -v."),
 ]
 
 

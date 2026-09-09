@@ -75,6 +75,39 @@ JSON ველებით `turn_id`, `message_id`, `index`, `final` და `del
 ეს ნიშნავს, რომ ქართული ბოლოსართი, რომელიც პირდაპირ გზას ან ბმულს ეწებება,
 ლათინურად დარჩება. სჯობს ასეთი სიტყვა ცალკე დაიწეროს.
 
+## ინგლისური სიტყვები
+
+პატარა ასოებით დაწერილი ინგლისური სიტყვა სხვა შემთხვევაში ქართულ სისულელედ
+გადაიქცეოდა. სიტყვა `hook` გახდებოდა „ჰოოკ“. ამის თავიდან ასაცილებლად ორი
+მექანიზმია.
+
+**ლექსიკონი.** ფაილი `data/keep.txt` შეიცავს სიტყვებს, რომლებიც ყოველთვის
+ლათინურად რჩება. თითო სიტყვა ხაზზე, `#` კომენტარია. შენი პირადი სია, თუ არსებობს
+მისამართზე `~/.config/khidi/keep.txt`, ზემოდან ერთვის, ანუ რეპოზიტორიის
+რედაქტირება არ გჭირდება.
+
+**გაქცევის ნიშანი.** ხაზი სიტყვის წინ ერთჯერადად იცავს მას. `\gamarjoba`
+დაბრუნდება როგორც gamarjoba, ლათინურად.
+
+### ქართული ბოლოსართი
+
+დეფისის შემდეგ მოსული ნაწილი ყოველთვის ქართულად გარდაიქმნება, თუნდაც სიტყვის
+თავი ლათინური დარჩეს. ეს ზუსტად ის წესია, რომელსაც ქართული უცხო სიტყვებთან
+იყენებს.
+
+| დაწერილი | ნაჩვენები |
+|---|---|
+| `python-is` | python-ის |
+| `docker-shi` | docker-ში |
+| `GitHub-ze` | GitHub-ზე |
+
+### შეჯახებები
+
+ზოგი ინგლისური სიტყვა ლათინურად დაწერილ ქართულ სიტყვასაც ჰგავს. სწორედ ამიტომ
+სია მოკლე ინგლისურ სიტყვებს არ შეიცავს. `is`, `am`, `an`, `or`, `as`, `var` და
+`ver` ერთდროულად ქართული სიტყვებია: ის, ამ, ან, ორ, ას, ვარ, ვერ. თუ ასეთი
+სიტყვა მართლაც ინგლისურად გჭირდება, გამოიყენე გაქცევის ნიშანი.
+
 ## დაყენება
 
 ```bash
@@ -85,8 +118,8 @@ cd khidi
 
 სკრიპტი hook-ს არეგისტრირებს ფაილში `~/.claude/settings.json`, წინა ვერსიის ასლს
 ინახავს გვერდით სახელით `settings.json.khidi-backup`, და `khidi` ბრძანებას დებს
-საქაღალდეში `~/.local/bin`. ამოქმედებისთვის Claude Code-ის თავიდან გაშვებაა
-საჭირო.
+საქაღალდეში `~/.local/bin`. Claude Code კონფიგურაციას ცოცხლად კითხულობს, ანუ
+ხიდი ჩვეულებრივ მაშინვე ამოქმედდება. თუ არა, თავიდან გაუშვი.
 
 სრული მოხსნა:
 
@@ -126,7 +159,7 @@ cd khidi
 ### ჩართვა და გამორთვა
 
 `khidi off` hook-ს შლის კონფიგურაციიდან და ჩაწერასაც თიშავს. `khidi on` უკან
-აბრუნებს. ორივე შემთხვევაში Claude Code თავიდან უნდა გაუშვა.
+აბრუნებს. ცვლილება ჩვეულებრივ მაშინვე მოქმედებს.
 
 ## ტესტები
 
@@ -155,6 +188,13 @@ Code spans, fenced blocks, URLs, paths, command flags, dotted identifiers and
 capitalised proper nouns are left exactly as written. The reverse direction is
 not possible today: `UserPromptSubmit` can add context but cannot replace the
 prompt, so your own Georgian input reaches the model unchanged.
+
+English words are protected two ways: `data/keep.txt` (merged with a personal
+`~/.config/khidi/keep.txt`) lists words that always stay Latin, and a leading
+backslash escapes a single word. A Georgian ending after a hyphen is still
+converted, so `python-is` displays as python-ის. Short English function words
+are kept off the list on purpose, because `is`, `an`, `or`, `as` and `var` are
+also ordinary Georgian words once written in Latin letters.
 
 Install with `./install.sh`, remove with `./uninstall.sh`, test with
 `python3 tests/test_khidi.py`.

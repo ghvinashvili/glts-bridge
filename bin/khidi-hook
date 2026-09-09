@@ -67,8 +67,37 @@ TABLE = [
 MATCHER = re.compile("|".join(seq for seq, _ in TABLE))
 LOOKUP = dict(TABLE)
 
-# A run of characters that may form one transliterated word.
-WORD = re.compile(r"[A-Za-z]+")
+# One word, optionally escaped with a backslash, optionally carrying Georgian
+# endings after hyphens: \python, python-is, docker-shi.
+WORD = re.compile(r"\\?[A-Za-z]+(?:-[A-Za-z]+)*")
+
+REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+KEEP_FILES = [
+    os.path.join(REPO, "data", "keep.txt"),
+    os.path.join(
+        os.environ.get("XDG_CONFIG_HOME") or os.path.expanduser("~/.config"),
+        "khidi",
+        "keep.txt",
+    ),
+]
+
+
+def load_keep():
+    """Words that always stay in Latin script, from the repo and user lists."""
+    words = set()
+    for path in KEEP_FILES:
+        try:
+            with open(path, encoding="utf-8") as fh:
+                for line in fh:
+                    line = line.split("#")[0].strip().lower()
+                    if line:
+                        words.add(line)
+        except OSError:
+            continue
+    return words
+
+
+KEEP = load_keep()
 
 # Tokens that must survive untouched: URLs, paths, flags, dotted identifiers.
 LITERAL = re.compile(
@@ -76,7 +105,7 @@ LITERAL = re.compile(
           [a-zA-Z][a-zA-Z0-9+.-]*://\S+   # scheme://host/path
         | ~?/\S+                          # absolute or ~/ path
         | \S+/\S+                         # anything with an inner slash
-        | --?[A-Za-z][\w-]*               # command line flag
+        | (?<![A-Za-z0-9])--?[A-Za-z][\w-]*  # command line flag, not word-internal
         | \w+\.[A-Za-z]\S*                # dotted name, file.ext, host.tld
         | \S+@\S+                         # email or user@host
         )""",
@@ -86,11 +115,27 @@ LITERAL = re.compile(
 FENCE = re.compile(r"^\s*(?:```|~~~)")
 
 
+def convert_segment(segment, escaped=False):
+    """Transliterate one hyphen-free piece unless it must stay in Latin."""
+    if escaped or not segment.islower() or segment in KEEP:
+        return segment
+    return MATCHER.sub(lambda m: LOOKUP[m.group(0)], segment)
+
+
 def convert_word(word):
-    """Transliterate one all-lowercase word; leave anything else alone."""
-    if not word.islower():
-        return word
-    return MATCHER.sub(lambda m: LOOKUP[m.group(0)], word)
+    """Transliterate one word, honouring the backslash escape and hyphens.
+
+    Only the first piece may be escaped: in "python-is" the head is an English
+    word that stays Latin and "is" is a Georgian ending that does not.
+    """
+    escaped = word.startswith("\\")
+    if escaped:
+        word = word[1:]
+    head, _, rest = word.partition("-")
+    pieces = [convert_segment(head, escaped)]
+    for segment in rest.split("-") if rest else []:
+        pieces.append(convert_segment(segment))
+    return "-".join(pieces)
 
 
 def convert_plain(text):
