@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""Round-trip checks for the khidi hook. Run: python3 tests/test_khidi.py"""
+"""Round-trip checks for the glts hook. Run: python3 tests/test_glts.py"""
 
 import json
 import os
 import subprocess
 import sys
 
-HOOK = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "bin", "khidi-hook")
+HOOK = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "bin", "glts-hook")
 
 
 def display(delta, message_id="test", final=True):

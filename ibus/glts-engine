@@ -1,0 +1,140 @@
+#!/usr/bin/env python3
+"""glts input method: type Georgian, send Latin.
+
+An IBus engine that keeps the whole line in the preedit. What you see while
+typing is Georgian script; what the application receives when you press Enter
+is the Latin transliteration glts understands.
+
+The engine declares the Georgian keyboard layout, so key events already arrive
+as Georgian characters and only the Latin side has to be worked out here.
+"""
+
+import os
+import sys
+
+import gi
+
+gi.require_version("IBus", "1.0")
+from gi.repository import GLib, IBus  # noqa: E402
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from glts_buffer import LATIN, Buffer  # noqa: E402
+
+PASS_THROUGH = {
+    IBus.KEY_Left, IBus.KEY_Right, IBus.KEY_Up, IBus.KEY_Down,
+    IBus.KEY_Home, IBus.KEY_End, IBus.KEY_Page_Up, IBus.KEY_Page_Down,
+    IBus.KEY_Tab, IBus.KEY_Delete, IBus.KEY_Insert,
+}
+
+COMMIT_KEYS = {IBus.KEY_Return, IBus.KEY_KP_Enter, IBus.KEY_ISO_Enter}
+
+
+class GltsEngine(IBus.Engine):
+    __gtype_name__ = "GltsEngine"
+
+    def __init__(self):
+        super().__init__()
+        self.buffer = Buffer()
+
+    # -- preedit -----------------------------------------------------------
+
+    def refresh(self):
+        text = IBus.Text.new_from_string(self.buffer.shown)
+        length = len(self.buffer.shown)
+        if length:
+            text.append_attribute(
+                IBus.AttrType.UNDERLINE, IBus.AttrUnderline.SINGLE, 0, length
+            )
+        self.update_preedit_text(text, length, length > 0)
+
+    def clear(self):
+        self.buffer.clear()
+        self.refresh()
+
+    def flush(self):
+        """Send the Latin form to the application and drop the preedit."""
+        latin = self.buffer.take()
+        if not latin:
+            self.refresh()
+            return
+        self.hide_preedit_text()
+        self.commit_text(IBus.Text.new_from_string(latin))
+
+    # -- typing ------------------------------------------------------------
+
+    def add(self, char):
+        self.buffer.add(char)
+        self.refresh()
+
+    def backspace(self):
+        if not self.buffer.backspace():
+            return False
+        self.refresh()
+        return True
+
+    def do_process_key_event(self, keyval, keycode, state):
+        if state & IBus.ModifierType.RELEASE_MASK:
+            return False
+
+        # Anything held with Ctrl or Alt belongs to the application.
+        if state & (IBus.ModifierType.CONTROL_MASK | IBus.ModifierType.MOD1_MASK):
+            self.flush()
+            return False
+
+        if keyval in COMMIT_KEYS:
+            self.flush()
+            return False
+
+        if keyval == IBus.KEY_BackSpace:
+            return self.backspace()
+
+        if keyval == IBus.KEY_Escape:
+            if self.buffer.shown:
+                # Escape gives up on the conversion and sends the Georgian.
+                georgian = self.buffer.shown
+                self.buffer.clear()
+                self.hide_preedit_text()
+                self.commit_text(IBus.Text.new_from_string(georgian))
+                return True
+            return False
+
+        if keyval in PASS_THROUGH:
+            self.flush()
+            return False
+
+        # These bindings hand back a string, empty for non-character keys.
+        char = IBus.keyval_to_unicode(keyval)
+        if not char:
+            return False
+
+        if char in LATIN or char.isprintable():
+            # Spaces, digits and punctuation are the same on both sides.
+            self.add(char)
+            return True
+
+        return False
+
+    def do_focus_out(self):
+        self.flush()
+
+    def do_reset(self):
+        self.clear()
+
+    def do_disable(self):
+        self.flush()
+
+
+def main():
+    IBus.init()
+    bus = IBus.Bus()
+    bus.connect("disconnected", lambda *_: GLib.MainLoop().quit())
+
+    factory = IBus.Factory.new(bus.get_connection())
+    factory.add_engine("glts", GltsEngine.__gtype__)
+
+    bus.request_name("org.freedesktop.IBus.Glts", 0)
+    GLib.MainLoop().run()
+
+
+if __name__ == "__main__":
+    main()

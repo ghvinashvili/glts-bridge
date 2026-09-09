@@ -1,7 +1,7 @@
 # Words that always stay in Latin script.
 #
 # One word per line, lowercase, comments start with #. A user list at
-# ~/.config/khidi/keep.txt is merged on top of this one, so you can add your
+# ~/.config/glts/keep.txt is merged on top of this one, so you can add your
 # own words without editing the repository.
 #
 # Short English function words are deliberately absent: "is", "am", "an", "or",
@@ -89,7 +89,6 @@ markup
 memory
 merge
 metadata
-method
 middleware
 migration
 module

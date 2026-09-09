@@ -1,25 +1,25 @@
 #!/usr/bin/env bash
-# Register khidi as a MessageDisplay hook and put the CLI on PATH.
+# Register glts as a MessageDisplay hook and put the CLI on PATH.
 set -euo pipefail
 
 REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BINDIR="$HOME/.local/bin"
 SETTINGS="${CLAUDE_CONFIG_DIR:-$HOME/.claude}/settings.json"
 
-chmod +x "$REPO/bin/khidi" "$REPO/bin/khidi-hook"
+chmod +x "$REPO/bin/glts" "$REPO/bin/glts-hook"
 
 mkdir -p "$BINDIR"
-ln -sf "$REPO/bin/khidi" "$BINDIR/khidi"
+ln -sf "$REPO/bin/glts" "$BINDIR/glts"
 
-[ -f "$SETTINGS" ] && cp "$SETTINGS" "$SETTINGS.khidi-backup"
+[ -f "$SETTINGS" ] && cp "$SETTINGS" "$SETTINGS.glts-backup"
 
-"$REPO/bin/khidi" on
+"$REPO/bin/glts" on
 
 echo
-echo "CLI installed at $BINDIR/khidi"
-[ -f "$SETTINGS.khidi-backup" ] && echo "Previous settings kept at $SETTINGS.khidi-backup"
+echo "CLI installed at $BINDIR/glts"
+[ -f "$SETTINGS.glts-backup" ] && echo "Previous settings kept at $SETTINGS.glts-backup"
 echo
-echo "Try:  khidi status        # is the bridge on?"
-echo "      khidi watch         # follow every conversion live"
-echo "      khidi try gamarjoba # convert one line"
-echo "      khidi off           # switch the bridge off again"
+echo "Try:  glts status        # is the bridge on?"
+echo "      glts watch         # follow every conversion live"
+echo "      glts try gamarjoba # convert one line"
+echo "      glts off           # switch the bridge off again"

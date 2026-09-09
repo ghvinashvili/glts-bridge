@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<component>
+  <name>org.freedesktop.IBus.Glts</name>
+  <description>GLTS Bridge: type Georgian, send Latin</description>
+  <exec>/home/tite/glts-bridge/ibus/glts-engine</exec>
+  <version>1.0</version>
+  <author>glts</author>
+  <license>MIT</license>
+  <homepage>https://github.com/ghvinashvili/glts-bridge</homepage>
+  <textdomain>glts</textdomain>
+  <engines>
+    <engine>
+      <name>glts</name>
+      <language>ka</language>
+      <license>MIT</license>
+      <author>glts</author>
+      <layout>ge</layout>
+      <longname>GLTS Bridge (Georgian to Latin)</longname>
+      <description>Shows Georgian while you type, sends the Latin transliteration.</description>
+      <rank>50</rank>
+      <symbol>ხ</symbol>
+    </engine>
+  </engines>
+</component>

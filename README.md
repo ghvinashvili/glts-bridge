@@ -1,6 +1,8 @@
-# khidi — ხიდი
+# GLTS Bridge
 
-`khidi` არის ქართული ტრანსლიტერაციის ხიდი [Claude Code](https://claude.com/claude-code)-ისთვის.
+**G**eorgian **L**anguage **T**oken **S**aver.
+
+`glts` არის ქართული ტრანსლიტერაციის ხიდი [Claude Code](https://claude.com/claude-code)-ისთვის.
 
 მოდელი პასუხს ლათინური სიმბოლოებით წერს, ეკრანზე კი შენ ქართულ დამწერლობას
 ხედავ. კოდი, ბრძანებები, ბმულები და ფაილების სახელები უცვლელი რჩება.
@@ -14,7 +16,7 @@ ekrani:  გამარჯობა, Docker დააყენდა. გაუ
 
 ქართული ასო UTF-8-ში სამ ბაიტს იკავებს და მოდელის ტოკენიზატორი მას რამდენიმე
 ტოკენად ჭრის. იგივე ტექსტი ლათინური ასოებით ორჯერ-სამჯერ ნაკლებ ტოკენს ხარჯავს.
-`khidi` საშუალებას გაძლევს ტოკენები ლათინურად დაზოგო, კითხვა კი ქართულად
+`glts` საშუალებას გაძლევს ტოკენები ლათინურად დაზოგო, კითხვა კი ქართულად
 განაგრძო.
 
 ## როგორ მუშაობს
@@ -96,7 +98,7 @@ JSON ველებით `turn_id`, `message_id`, `index`, `final` და `del
 
 **ლექსიკონი.** ფაილი `data/keep.txt` შეიცავს სიტყვებს, რომლებიც ყოველთვის
 ლათინურად რჩება. თითო სიტყვა ხაზზე, `#` კომენტარია. შენი პირადი სია, თუ არსებობს
-მისამართზე `~/.config/khidi/keep.txt`, ზემოდან ერთვის, ანუ რეპოზიტორიის
+მისამართზე `~/.config/glts/keep.txt`, ზემოდან ერთვის, ანუ რეპოზიტორიის
 რედაქტირება არ გჭირდება.
 
 **გაქცევის ნიშანი.** ხაზი სიტყვის წინ ერთჯერადად იცავს მას. `\gamarjoba`
@@ -133,13 +135,13 @@ JSON ველებით `turn_id`, `message_id`, `index`, `final` და `del
 ## დაყენება
 
 ```bash
-git clone https://github.com/ghvinashvili/khidi.git
-cd khidi
+git clone https://github.com/ghvinashvili/glts-bridge.git
+cd glts-bridge
 ./install.sh
 ```
 
 სკრიპტი hook-ს არეგისტრირებს ფაილში `~/.claude/settings.json`, წინა ვერსიის ასლს
-ინახავს გვერდით სახელით `settings.json.khidi-backup`, და `khidi` ბრძანებას დებს
+ინახავს გვერდით სახელით `settings.json.glts-backup`, და `glts` ბრძანებას დებს
 საქაღალდეში `~/.local/bin`. Claude Code კონფიგურაციას ცოცხლად კითხულობს, ანუ
 ხიდი ჩვეულებრივ მაშინვე ამოქმედდება. თუ არა, თავიდან გაუშვი.
 
@@ -153,26 +155,26 @@ cd khidi
 
 | ბრძანება | რას აკეთებს |
 |---|---|
-| `khidi status` | აჩვენებს, ჩართულია თუ არა ხიდი და სად წერია ჟურნალი |
-| `khidi watch` | ცოცხლად აჩვენებს ყოველ გარდაქმნას, სანამ Ctrl+C არ დააჭერ |
-| `khidi try TEXT` | ერთ სტრიქონს გარდაქმნის, არაფერს ცვლის |
-| `khidi on` | რთავს ხიდს |
-| `khidi off` | თიშავს ხიდს |
+| `glts status` | აჩვენებს, ჩართულია თუ არა ხიდი და სად წერია ჟურნალი |
+| `glts watch` | ცოცხლად აჩვენებს ყოველ გარდაქმნას, სანამ Ctrl+C არ დააჭერ |
+| `glts try TEXT` | ერთ სტრიქონს გარდაქმნის, არაფერს ცვლის |
+| `glts on` | რთავს ხიდს |
+| `glts off` | თიშავს ხიდს |
 
 ### თვალყურის დევნება
 
-`khidi watch` აჩვენებს ორივე მხარეს: რას აგზავნის მოდელი და რას ხედავ შენ.
+`glts watch` აჩვენებს ორივე მხარეს: რას აგზავნის მოდელი და რას ხედავ შენ.
 
 ```
 22:11:49 final
-  <- khidi mushaobs.
+  <- glts mushaobs.
   -> ხიდი მუშაობს.
 ```
 
 ის შეიძლება მუდმივად გაშვებული გქონდეს მეორე ტერმინალში. სანამ მუშაობს, hook
-ყოველ გარდაქმნას წერს ფაილში `~/.local/state/khidi/trace.jsonl`. გაჩერებისას
+ყოველ გარდაქმნას წერს ფაილში `~/.local/state/glts/trace.jsonl`. გაჩერებისას
 ჩაწერა ავტომატურად ითიშება, რომ ჟურნალი უსასრულოდ არ გაიზარდოს. თუ გინდა, რომ
-ჩაწერა გაჩერების შემდეგაც გაგრძელდეს, გამოიყენე `khidi watch --keep`. ჟურნალი
+ჩაწერა გაჩერების შემდეგაც გაგრძელდეს, გამოიყენე `glts watch --keep`. ჟურნალი
 ხუთ მეგაბაიტს რომ გადააჭარბებს, თავიდან იწყება.
 
 როცა ჩაწერა გამორთულია, hook მხოლოდ ერთ შემოწმებას აკეთებს და არაფერს წერს
@@ -180,13 +182,13 @@ cd khidi
 
 ### ჩართვა და გამორთვა
 
-`khidi off` hook-ს შლის კონფიგურაციიდან და ჩაწერასაც თიშავს. `khidi on` უკან
+`glts off` hook-ს შლის კონფიგურაციიდან და ჩაწერასაც თიშავს. `glts on` უკან
 აბრუნებს. ცვლილება ჩვეულებრივ მაშინვე მოქმედებს.
 
 ## ტესტები
 
 ```bash
-python3 tests/test_khidi.py
+python3 tests/test_glts.py
 ```
 
 ტესტები ამოწმებს ასოების ცხრილს, დიგრაფების უპირატესობას, კოდისა და ბმულების
@@ -201,7 +203,7 @@ python3 tests/test_khidi.py
 
 ## English
 
-`khidi` (ხიდი, "bridge") lets Claude Code answer in Latin transliteration while
+`glts`, the Georgian Language Token Saver, lets Claude Code answer in Latin transliteration while
 you read Georgian script. It registers a `MessageDisplay` hook that rewrites the
 displayed text only; the stored transcript and the model's own context keep the
 Latin form, so the token saving is real across turns.
@@ -223,18 +225,18 @@ Type in Latin yourself if you want your own side to be cheap too; the model
 reads either form, and your spelling need not match the table.
 
 English words are protected two ways: `data/keep.txt` (merged with a personal
-`~/.config/khidi/keep.txt`) lists words that always stay Latin, and a leading
+`~/.config/glts/keep.txt`) lists words that always stay Latin, and a leading
 backslash escapes a single word. A Georgian ending after a hyphen is still
 converted, so `python-is` displays as python-ის. Short English function words
 are kept off the list on purpose, because `is`, `an`, `or`, `as` and `var` are
 also ordinary Georgian words once written in Latin letters.
 
 Install with `./install.sh`, remove with `./uninstall.sh`, test with
-`python3 tests/test_khidi.py`.
+`python3 tests/test_glts.py`.
 
-The `khidi` CLI controls and inspects the bridge: `khidi status` reports whether
-it is registered, `khidi watch` follows every conversion live in a second
+The `glts` CLI controls and inspects the bridge: `glts status` reports whether
+it is registered, `glts watch` follows every conversion live in a second
 terminal and shows both the Latin that was sent and the Georgian that was
-displayed, `khidi try TEXT` converts a single line, and `khidi on` / `khidi off`
+displayed, `glts try TEXT` converts a single line, and `glts on` / `glts off`
 switch the bridge itself. Tracing is only written while `watch` is running, so
 leaving the bridge on costs nothing.
