@@ -78,7 +78,7 @@ JSON ველებით `turn_id`, `message_id`, `index`, `final` და `del
 ## დაყენება
 
 ```bash
-git clone https://github.com/USER/khidi.git
+git clone https://github.com/ghvinashvili/khidi.git
 cd khidi
 ./install.sh
 ```
