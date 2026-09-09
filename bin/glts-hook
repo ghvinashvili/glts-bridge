@@ -106,7 +106,7 @@ LITERAL = re.compile(
         | ~?/\S+                          # absolute or ~/ path
         | \S+/\S+                         # anything with an inner slash
         | (?<![^\s])--?[A-Za-z][\w-]*      # command line flag, at a token start
-        | \w+\.[A-Za-z]\S*                # dotted name, file.ext, host.tld
+        | [A-Za-z0-9_]{2,}\.[A-Za-z]\S*   # dotted name, file.ext, host.tld
         | \S+@\S+                         # email or user@host
         )""",
     re.VERBOSE,
@@ -122,9 +122,11 @@ def convert_segment(segment, escaped=False):
     """Transliterate one hyphen-free piece unless it must stay in Latin.
 
     An apostrophe inside the piece is a digraph break, not a letter: "khid'ze"
-    is ხიდზე, while "khidze" would read the "dz" as ძ.
+    is ხიდზე, while "khidze" would read the "dz" as ძ. It also defeats the keep
+    list, which is how a Georgian word that happens to spell an English one is
+    written: "d'rupal" is დრუპალ, "drupal" stays Latin.
     """
-    if escaped or not segment.islower() or segment.replace("'", "") in KEEP:
+    if escaped or not segment.islower() or segment in KEEP:
         return segment.replace("'", "")
     parts = segment.split("'")
     return "".join(MATCHER.sub(lambda m: LOOKUP[m.group(0)], part) for part in parts)
@@ -213,6 +215,69 @@ def convert_delta(delta, message_id, final):
             pass
     else:
         write_fence(path, inside)
+    return "\n".join(lines)
+
+
+# -- the other direction: Georgian in, Latin out ---------------------------
+
+GEORGIAN = {}
+for _seq, _letter in TABLE:
+    GEORGIAN.setdefault(_letter, _seq)
+
+LETTERS = re.compile(r"[\u10d0-\u10fa]+|[A-Za-z]+")
+
+
+def latin_word(word, mark=True):
+    """One run of letters. With mark, the display hook can undo it exactly."""
+    if word[0].isascii():
+        if not mark:
+            return word
+        # Already Latin. The hook would read a lowercase word as Georgian
+        # unless it is on the keep list, so such a word needs the escape.
+        return word if not word.islower() or word in KEEP else "\\" + word
+    out = []
+    for char in word:
+        piece = GEORGIAN.get(char, char)
+        if out and MATCHER.match(out[-1][-1] + piece[0]):
+            out.append("'")
+        out.append(piece)
+    joined = "".join(out)
+    if mark and joined.islower() and joined in KEEP:
+        # An apostrophe stops the hook taking this for an English word.
+        joined = joined[0] + "'" + joined[1:]
+    return joined
+
+
+def latin_plain(text, mark):
+    convert = lambda m: latin_word(m.group(0), mark)  # noqa: E731
+    out = []
+    pos = 0
+    for hit in LITERAL.finditer(text):
+        out.append(LETTERS.sub(convert, text[pos:hit.start()]))
+        out.append(hit.group(0))
+        pos = hit.end()
+    out.append(LETTERS.sub(convert, text[pos:]))
+    return "".join(out)
+
+
+def to_latin(text, mark=False):
+    """Rewrite Georgian text as Latin.
+
+    Without mark the output is for reading and is as short as possible. With
+    mark it also carries the escapes that let the display hook rebuild the
+    Georgian exactly.
+    """
+    inside = False
+    lines = text.split("\n")
+    for index, line in enumerate(lines):
+        if FENCE.match(line):
+            inside = not inside
+            continue
+        if not inside:
+            parts = line.split("`")
+            for i in range(0, len(parts), 2):
+                parts[i] = latin_plain(parts[i], mark)
+            lines[index] = "`".join(parts)
     return "\n".join(lines)
 
 

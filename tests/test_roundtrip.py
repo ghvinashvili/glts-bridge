@@ -39,6 +39,26 @@ def roundtrip(text):
     return latin, hook.convert_delta(latin, "roundtrip", True)
 
 
+def document_case():
+    """A whole document must survive Georgian -> Latin -> Georgian."""
+    text = "\n".join(
+        [
+            "# სათაური",
+            "",
+            "ეს არის `settings.json` ფაილი და https://drupal.ddev.site ბმული.",
+            "ე.ი. აბრევიატურაც უნდა დაბრუნდეს.",
+            "დრუპალ არის ქართული სიტყვა, Drupal კი პროდუქტის სახელი.",
+            "",
+            "```bash",
+            "sudo apt install ddev",
+            "```",
+            "",
+            "დასასრული.",
+        ]
+    )
+    return text, hook.convert_delta(hook.to_latin(text, True), "doc", True)
+
+
 def main():
     lines = SENTENCES
     if len(sys.argv) > 1:
@@ -53,8 +73,16 @@ def main():
             if failures <= 10:
                 print("FAIL  %s\n  latin %s\n  back  %s" % (text, latin, back))
 
+    source, back = document_case()
+    if back != source:
+        failures += 1
+        print("FAIL  document did not survive the trip")
+        for a, b in zip(source.split("\n"), back.split("\n")):
+            if a != b:
+                print("  %r\n  %r" % (a, b))
+
     print("%d of %d line(s) failed" % (failures, len(lines)) if failures
-          else "all %d line(s) round-tripped" % len(lines))
+          else "all %d line(s) round-tripped, document included" % len(lines))
     return 1 if failures else 0
 
 
